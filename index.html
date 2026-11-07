@@ -133,9 +133,16 @@ async function inviteWorkspaceMember(){
     await loadTeamMembers();
   }catch(e){
     console.error('Employee invitation failed:',e);
-    const message=e?.context?.error||e?.message||'Unknown error';
+    let message=e?.message||'Unknown error';
+    if(e?.context instanceof Response){
+      try{
+        const details=await e.context.clone().json();
+        console.error('Edge Function error details:',details);
+        message=[details.stage?'Stage: '+details.stage:'',details.error||''].filter(Boolean).join(' | ')||message;
+      }catch(parseError){console.error('Could not read Edge Function response:',parseError)}
+    }
     if(status)status.textContent='Invitation failed: '+message;
-    msg('Invitation failed. Check the message in Team & Cloud.');
+    msg('Invitation failed: '+message);
   }finally{if(btn)btn.disabled=false}
 }
 async function loadTeamMembers(){const el=$('teamMembersList');if(!el)return;if(!sb||!currentWorkspace){el.textContent='Sign in to load workspace members.';return}el.textContent='Loading members…';try{const {data,error}=await sb.from('workspace_members').select('user_id,role').eq('workspace_id',currentWorkspace);if(error)throw error;teamCache=data||[];if(!teamCache.length){el.textContent='No member records were returned.';return}el.innerHTML=table(['User ID','Workspace role'],teamCache.map(m=>[esc(m.user_id),pill(m.role||'member')]));const sel=$('permMember');if(sel){sel.innerHTML='<option value="">Select member</option>'+teamCache.map(m=>`<option value="${esc(m.user_id)}">${esc(m.user_id.slice(0,8)+'…')} · ${esc(m.role||'member')}</option>`).join('');if(teamCache.length===1)sel.value=teamCache[0].user_id;loadMemberPermissions()}}catch(e){el.textContent='Member list unavailable: '+(e.message||'permission denied')}}
