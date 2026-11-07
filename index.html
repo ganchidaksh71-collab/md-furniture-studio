@@ -119,7 +119,7 @@ async function inviteWorkspaceMember(){
   if(currentRole!=='owner'&&currentRole!=='admin'){msg('Only workspace owners can invite employees.');return}
   const email=$('inviteEmail')?.value.trim().toLowerCase();
   const job_role=$('inviteRole')?.value||'Sales';
-  if(!email||! /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){msg('Enter a valid employee email address.');return}
+  if(!email||! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg('Enter a valid employee email address.');return}
   const btn=$('inviteBtn'),status=$('inviteMsg');
   if(btn)btn.disabled=true;
   if(status)status.textContent='Sending invitation…';
