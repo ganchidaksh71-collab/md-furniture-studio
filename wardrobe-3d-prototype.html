@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MD 3D Furniture Studio · Wardrobe Configurator</title>
+<style>
+:root{--ink:#292d32;--gold:#b68b45;--paper:#f5f3ef;--line:#e4e0d8;--muted:#72777d}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px Inter,Arial,sans-serif}
+header{height:68px;background:#292d32;color:white;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.brand{font-weight:800;letter-spacing:1px}.brand span{color:#d5ad70}header small{color:#c4cbd0}
+main{max-width:1500px;margin:auto;padding:22px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px}
+.panel,.stage,.drawings{background:white;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 8px 25px #22222208}
+h1{font-size:22px;margin:0 0 5px}h2{font-size:15px;margin:0 0 15px}.muted{color:var(--muted);font-size:12px;line-height:1.5}
+.field{margin:14px 0}.field label{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#59616a;margin-bottom:6px}
+input,select{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff;color:var(--ink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:1px solid var(--line);background:white;border-radius:8px;padding:10px 12px;font-weight:700;cursor:pointer}.primary{background:var(--ink);color:white;border-color:var(--ink)}.gold{background:var(--gold);color:white;border-color:var(--gold)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.stage{padding:0;overflow:hidden}.stagehead{padding:17px 19px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.view{height:560px;position:relative;background:radial-gradient(ellipse at 50% 42%,#fff 0,#f3f2ef 75%)}#viewport{width:100%;height:100%}.hint{position:absolute;bottom:13px;left:15px;background:#ffffffdc;padding:8px 10px;border-radius:7px;font-size:11px;color:#68717a}
+.specs{display:flex;gap:8px;flex-wrap:wrap}.spec{background:#f4f1eb;border-radius:7px;padding:7px 10px;font-size:11px}.drawings{grid-column:2;margin-top:0}.drawinggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.drawing{border:1px solid var(--line);border-radius:9px;padding:10px;min-height:210px}.drawing h3{font-size:11px;margin:0 0 6px;color:#59616a}.drawing svg{width:100%;height:165px}.status{font-size:11px;color:#26734d}
+@media(max-width:900px){main{grid-template-columns:1fr}.drawings{grid-column:1}.view{height:430px}}@media(max-width:560px){header{padding:0 14px}main{padding:10px}.drawinggrid{grid-template-columns:1fr}.view{height:360px}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">MD <span>FURNITURE</span> STUDIO</div><small>3D Furniture Configurator · Prototype</small></div><small>WARDROBE / PARAMETRIC MODEL</small></header>
+<main>
+<aside class="panel">
+<h1>Wardrobe builder</h1><p class="muted">Change dimensions and components. The 3D model updates automatically. All dimensions are in millimetres.</p>
+<div class="field"><label>Overall dimensions <span>mm</span></label><div class="two"><input id="width" type="number" min="600" max="4000" value="1800" aria-label="Width"><input id="height" type="number" min="600" max="3000" value="2100" aria-label="Height"><input id="depth" type="number" min="300" max="1200" value="600" aria-label="Depth"></div><div class="muted">Width · Height · Depth</div></div>
+<div class="field"><label>Board thickness <span>mm</span></label><select id="thickness"><option value="18" selected>18 mm</option><option value="16">16 mm</option><option value="19">19 mm</option><option value="25">25 mm</option></select></div>
+<div class="field"><label>Number of shutters</label><select id="doors"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
+<div class="two">
+<div class="field"><label>Internal shelves</label><input id="shelves" type="number" min="0" max="12" value="4"></div>
+<div class="field"><label>Drawers</label><input id="drawers" type="number" min="0" max="6" value="2"></div>
+</div>
+<div class="field"><label>Board / laminate finish</label><select id="finish"><option value="#b58b60">Natural Oak</option><option value="#e8e1d4">Warm Ivory</option><option value="#6e7475">Graphite</option><option value="#694c3d">Walnut</option><option value="#ffffff">Matte White</option></select></div>
+<div class="field"><label>Back panel</label><select id="back"><option value="6">6 mm</option><option value="8">8 mm</option><option value="9" selected>9 mm</option></select></div>
+<div class="actions"><button class="btn primary" id="update">Update 3D model</button><button class="btn" id="reset">Reset</button></div>
+<div class="actions"><button class="btn gold" id="print">Print technical sheet</button></div>
+<p class="muted">Prototype note: visual layout only. Confirm joinery, clearances, hardware, edge banding and manufacturing tolerances before production.</p>
+<div id="status" class="status" aria-live="polite">Model ready · 1800 × 2100 × 600 mm</div>
+</aside>
+<section class="stage">
+<div class="stagehead"><div><h2 style="margin:0">Live 3D preview</h2><span class="muted">Drag to rotate · scroll to zoom</span></div><div class="specs"><span class="spec" id="dimtag">1800 × 2100 × 600 mm</span><span class="spec">18 mm board</span></div></div>
+<div class="view"><div id="viewport"></div><div class="hint">Isometric preview · Orbit / zoom enabled</div></div>
+</section>
+<section class="drawings">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><h2 style="margin:0 0 4px">Technical views</h2><p class="muted" style="margin:0">Schematic front, side and top elevations with overall dimensions.</p></div><span class="muted">Units: mm</span></div>
+<div class="drawinggrid" style="margin-top:14px">
+<div class="drawing"><h3>FRONT ELEVATION</h3><div id="front"></div></div>
+<div class="drawing"><h3>SIDE ELEVATION</h3><div id="side"></div></div>
+<div class="drawing"><h3>TOP PLAN</h3><div id="top"></div></div>
+</div>
+</section>
+</main>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+const $=id=>document.getElementById(id), scene=new THREE.Scene();scene.background=new THREE.Color('#f3f2ef');
+const camera=new THREE.PerspectiveCamera(38,1,.1,100);camera.position.set(4.2,3.2,5.4);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;$('viewport').appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(0,1.05,0);
+scene.add(new THREE.HemisphereLight(0xffffff,0x77716a,2));const key=new THREE.DirectionalLight(0xffffff,2.2);key.position.set(3,5,4);key.castShadow=true;scene.add(key);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshStandardMaterial({color:'#eeece8',roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.015;floor.receiveShadow=true;scene.add(floor);
+const grid=new THREE.GridHelper(12,24,0xd7d2ca,0xe5e1db);grid.position.y=0;scene.add(grid);
+let model=new THREE.Group();scene.add(model);
+const mat=(color,rough=.68)=>new THREE.MeshStandardMaterial({color,roughness:rough});
+function board(parent,x,y,z,w,h,d,color){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
+function build(){
+ const W=clamp(+$('width').value,600,4000),H=clamp(+$('height').value,600,3000),D=clamp(+$('depth').value,300,1200),T=clamp(+$('thickness').value,12,40),B=+$('back').value,doors=clamp(+$('doors').value,2,5),shelves=clamp(+$('shelves').value,0,12),drawers=clamp(+$('drawers').value,0,6),color=$('finish').value;
+ for(const v of [W,H,D,T])if(!Number.isFinite(v))return;
+ scene.remove(model);model=new THREE.Group();scene.add(model);
+ const w=W/1000,h=H/1000,d=D/1000,t=T/1000,b=B/1000,innerW=w-2*t,innerH=h-2*t;
+ // Cabinet carcass: left/right, bottom/top, back
+ board(model,-w/2+t/2,h/2,0,t,h,d,color);
+ board(model,w/2-t/2,h/2,0,t,h,d,color);
+ board(model,0,t/2,0,innerW,t,d,color);
+ board(model,0,h-t/2,0,innerW,t,d,color);
+ board(model,0,h/2,-d/2+b/2,innerW,h,b,'#d7c7ad');
+ // Interior shelves, evenly distributed above drawer zone
+ const drawerH=drawers?Math.min(.62,h*.38):0;
+ for(let i=1;i<=shelves;i++){const sy=drawerH+(h-drawerH)*i/(shelves+1);board(model,0,sy,0,innerW,d-.025,t,color)}
+ // Drawer boxes and faces at lower portion
+ for(let i=0;i<drawers;i++){const dh=drawerH/drawers, y=dh*(i+.5);board(model,0,y,d/2-.018,innerW*.96,dh-.012,.035,color);board(model,0,y,d/2+.006,innerW*.96,dh-.012,.025,'#c6a57e');const knob=new THREE.Mesh(new THREE.BoxGeometry(.10,.018,.025),mat('#4a4540',.35));knob.position.set(0,y,d/2+.025);model.add(knob)}
+ // Shutters across front with subtle gaps and vertical handles
+ const gap=.004,doorW=(w+gap)/doors;
+ for(let i=0;i<doors;i++){const x=-w/2+doorW*(i+.5);board(model,x,h/2,d/2+.018,doorW-gap,h-2*t,.035,color);
+ const handle=new THREE.Mesh(new THREE.BoxGeometry(.018,.16,.025),mat('#77716a',.3));handle.position.set(x+doorW*.34,h*.52,d/2+.045);model.add(handle)}
+ // subtle plinth
+ board(model,0,.035,0,w-.03,.07,d-.02,'#8e8171');
+ // frame helper edges
+ const edges=new THREE.EdgesGeometry(new THREE.BoxGeometry(w,h,d));const wire=new THREE.LineSegments(edges,new THREE.LineBasicMaterial({color:0x5e554b,transparent:true,opacity:.45}));wire.position.y=h/2;model.add(wire);
+ controls.target.set(0,h/2,0);camera.position.set(w*2.3,h*1.65,d*3.2);controls.update();
+ $('dimtag').textContent=`${W} × ${H} × ${D} mm`;document.querySelector('.specs .spec:nth-child(2)').textContent=T+' mm board';
+ $('status').textContent=`Model updated · ${W} × ${H} × ${D} mm · ${doors} shutters · ${shelves} shelves · ${drawers} drawers`;
+ drawViews(W,H,D,doors,shelves,drawers);
+}
+function clamp(v,min,max){return Math.max(min,Math.min(max,Number.isFinite(v)?v:min))}
+function svgBox(width,height,inner){return `<svg viewBox="0 0 260 170" role="img" aria-label="Technical elevation"><g fill="none" stroke="#4d555b" stroke-width="1.4">${inner}</g><text x="130" y="164" text-anchor="middle" fill="#747b80" font-size="9">${width} mm</text></svg>`}
+function drawViews(W,H,D,doors,shelves,drawers){
+ const scale=Math.min(190/W,125/H),fw=W*scale,fh=H*scale,fx=(260-fw)/2,fy=12;
+ let front=`<rect x="${fx}" y="${fy}" width="${fw}" height="${fh}"/>`;
+ for(let i=1;i<doors;i++)front+=`<path d="M${fx+fw*i/doors} ${fy}v${fh}"/>`;
+ for(let i=1;i<=drawers;i++)front+=`<path d="M${fx+fw*.04} ${fy+fh*.64+fh*.30*i/(drawers+1)}h${fw*.92}"/>`;
+ front+=`<path d="M${fx-9} ${fy}h5m-5 0v${fh}m0 0h5"/>`;
+ $('front').innerHTML=svgBox(W,H,front)+`<div class="muted">Height: ${H} mm</div>`;
+ const ss=Math.min(180/D,125/H),sw=D*ss,sh=H*ss,sx=(260-sw)/2,sy=12;
+ $('side').innerHTML=svgBox(D,H,`<rect x="${sx}" y="${sy}" width="${sw}" height="${sh}"/><path d="M${sx+sw*.12} ${sy+sh*.25}h${sw*.76}M${sx+sw*.12} ${sy+sh*.5}h${sw*.76}M${sx+sw*.12} ${sy+sh*.75}h${sw*.76}"/>`)+`<div class="muted">Height: ${H} mm</div>`;
+ const ts=Math.min(190/W,125/D),tw=W*ts,td=D*ts,tx=(260-tw)/2,ty=12;
+ $('top').innerHTML=svgBox(W,D,`<rect x="${tx}" y="${ty}" width="${tw}" height="${td}"/><path d="M${tx} ${ty+td*.08}h${tw}"/>`)+`<div class="muted">Depth: ${D} mm</div>`;
+}
+function resize(){const box=$('viewport').getBoundingClientRect();camera.aspect=box.width/box.height;camera.updateProjectionMatrix();renderer.setSize(box.width,box.height)}
+window.addEventListener('resize',resize);new ResizeObserver(resize).observe($('viewport'));
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}resize();animate();build();
+$('update').onclick=build;
+$('reset').onclick=()=>{Object.entries({width:1800,height:2100,depth:600,thickness:18,doors:3,shelves:4,drawers:2,finish:'#b58b60',back:9}).forEach(([k,v])=>$(k).value=v);build()};
+$('print').onclick=()=>window.print();
+['width','height','depth','thickness','doors','shelves','drawers','finish','back'].forEach(id=>$(id).addEventListener('change',build));
+</script>
+</body></html>
